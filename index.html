@@ -218,6 +218,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
   <div class="nav-tab" onclick="switchView('detail')" id="tab-detail" style="display:none">── 展开详情</div>
   <div class="nav-tab" onclick="switchView('books')">书单图书馆</div>
   <div class="nav-tab" onclick="switchView('graph')">知识图谱</div>
+  <div class="nav-tab" onclick="switchView('problems')">问题索引</div>
 </nav>
 
 <main class="main">
@@ -356,6 +357,9 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 </div>
 
 </main>
+
+<!-- PROBLEMS VIEW -->
+<div id="view-problems" style="display:none"></div>
 
 <!-- MODEL MODAL -->
 <div class="modal-overlay" id="modal-overlay" onclick="closeModalOnBg(event)">
@@ -893,14 +897,17 @@ function switchView(view){
   document.getElementById('view-detail').style.display=view==='detail'?'block':'none';
   document.getElementById('view-books').style.display=view==='books'?'block':'none';
   document.getElementById('view-graph').style.display=view==='graph'?'block':'none';
+  document.getElementById('view-problems').style.display=view==='problems'?'block':'none';
   document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
   const tabs=document.querySelectorAll('.nav-tab');
   if(view==='atlas')tabs[0].classList.add('active');
   if(view==='detail')tabs[1].classList.add('active');
   if(view==='books')tabs[2].classList.add('active');
   if(view==='graph')tabs[3].classList.add('active');
+  if(view==='problems')tabs[4].classList.add('active');
   if(view==='books')renderBooks('all');
   if(view==='graph')initGraph();
+  if(view==='problems')renderProblems();
 }
 
 // ════════════════════════════════════════
@@ -1076,6 +1083,298 @@ function filterBooks(filter,btn){
   document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
   renderBooks(filter);
+}
+</script>
+
+<!-- PROBLEMS VIEW CSS + DATA + JS -->
+<script>
+// ════════════════════════════════════════
+// PROBLEM INDEX DATA — 6大场景 × 跨学科模型
+// ════════════════════════════════════════
+const PROBLEMS = [
+  {
+    id: 'decision',
+    icon: '⚖️',
+    title: '如何做出高质量决策',
+    subtitle: '在不确定性下减少系统性偏误',
+    color: '#c9a84c',
+    context: '适用：重大投资判断、战略方向选择、人才任用、进退场时机',
+    steps: [
+      { phase: '识别陷阱', desc: '先检查当前决策激活了哪些认知偏误' },
+      { phase: '建立框架', desc: '用第一性原理拆解问题，排除表层假设' },
+      { phase: '多模型验证', desc: '至少3个不同学科视角交叉检验' },
+      { phase: '设置触发点', desc: '预设让自己改变判断的条件，写下来' },
+    ],
+    models: [
+      { name: '贝叶斯推理（先验→后验）', disc: '2.1 概率论', role: '用新信息正确更新判断，避免过度或不足反应', tier: 'core' },
+      { name: '二阶思维', disc: '1.2 逻辑学', role: '不只看直接后果，追问"然后呢"的连锁反应', tier: 'core' },
+      { name: '外部视角（参照类别预测）', disc: '10.7 决策科学', role: '用同类事件的基础概率校正内部乐观偏差', tier: 'core' },
+      { name: '过度自信（自视过高）', disc: '7.4 误判心理学', role: '识别并主动对冲最常见的致命偏误', tier: 'guard' },
+      { name: 'Lollapalooza效应', disc: '7.4 误判心理学', role: '警惕多个偏误同时激活的非线性崩塌风险', tier: 'guard' },
+      { name: '地图与领土', disc: '1.1 认识论', role: '任何分析框架都是简化地图，不等于现实', tier: 'guard' },
+      { name: '第一性原理', disc: '3.1 物理学', role: '剥离行业惯例，回到不可再分的基本事实重建判断', tier: 'tool' },
+      { name: '清单法', disc: '10.7 决策科学', role: '将高频决策标准化，防止遗漏关键检查项', tier: 'tool' },
+      { name: '101010旁观思维', disc: '10.7 决策科学', role: '10分钟/10个月/10年后如何看这个决策', tier: 'tool' },
+    ],
+    books: ['思考，快与慢', '穷查理宝典', '原则', '随机漫步的傻瓜'],
+  },
+  {
+    id: 'competition',
+    icon: '⚔️',
+    title: '如何识别和应对竞争威胁',
+    subtitle: '从进化论到博弈论的竞争分析框架',
+    color: '#9e4a4a',
+    context: '适用：竞品分析、行业格局判断、防御性战略、新进入者威胁评估',
+    steps: [
+      { phase: '格局扫描', desc: '用进化博弈论判断行业均衡是否稳定' },
+      { phase: '护城河审计', desc: '逐项检验自身5种护城河的宽度与趋势' },
+      { phase: '威胁识别', desc: '颠覆性创新框架：谁在低端用"够用"攻击你' },
+      { phase: '非对称反制', disc: '不在对方强项正面竞争，找未争夺的价值维度' },
+    ],
+    models: [
+      { name: '自然选择（达尔文）', disc: '4.1 进化论', role: '适者生存而非强者生存——适应环境才是核心', tier: 'core' },
+      { name: '进化博弈论', disc: '2.3 博弈论', role: '策略在群体中扩散演化，ESS稳定策略的识别', tier: 'core' },
+      { name: '护城河理论（巴菲特·五种护城河）', disc: '10.1 价值投资', role: '五种结构性壁垒：无形资产/转换成本/网络效应/成本优势/规模', tier: 'core' },
+      { name: '颠覆性创新（克里斯滕森）', disc: '9.1 战略管理', role: '低端颠覆者的识别：从"不够好"开始蚕食', tier: 'core' },
+      { name: '纳什均衡', disc: '2.3 博弈论', role: '判断当前竞争格局是否已到均衡，何时会被打破', tier: 'tool' },
+      { name: '囚徒困境', disc: '2.3 博弈论', role: '价格战/补贴战的博弈结构，如何协调走出内耗', tier: 'tool' },
+      { name: '幂律分布', disc: '2.5 复杂适应系统与非线性动力学', role: '赢家通吃市场的识别：网络效应下的集中度规律', tier: 'tool' },
+      { name: '路径依赖', disc: '4.1 进化论', role: '在位者的路径锁定为何给颠覆者创造机会', tier: 'guard' },
+    ],
+    books: ['竞争战略', '创新者的窘境', '穷查理宝典', '从0到1'],
+  },
+  {
+    id: 'motivation',
+    icon: '🔥',
+    title: '如何激励团队',
+    subtitle: '从神经科学到激励设计的完整框架',
+    color: '#4a8f5e',
+    context: '适用：绩效考核设计、团队士气管理、关键人才留存、组织变革动员',
+    steps: [
+      { phase: '诊断动机类型', desc: '区分内在动机（自主/胜任/归属）vs外在激励' },
+      { phase: '激励相容检验', desc: '逐项检查KPI是否真的指向组织目标' },
+      { phase: '建立心理安全', desc: '高绩效的前提：成员敢说真话、敢暴露问题' },
+      { phase: '设计峰值时刻', desc: '用峰终定律在关键节点创造正向情感记忆' },
+    ],
+    models: [
+      { name: '自我决定论（内在动机三要素）', disc: '7.6 积极心理学', role: '自主感+胜任感+归属感是可持续高绩效的燃料', tier: 'core' },
+      { name: '激励相容', disc: '8.1 微观经济学', role: '激励机制设计核心：让个人利益与组织目标同向', tier: 'core' },
+      { name: '心理安全感（艾德蒙森）', disc: '9.2 组织行为学/领导力', role: 'Google研究：高绩效团队的第一预测因子', tier: 'core' },
+      { name: '奖惩超级反应倾向', disc: '7.4 误判心理学', role: '激励扭曲的根源：错误KPI如何驱动错误行为', tier: 'guard' },
+      { name: '嫉妒妒忌倾向', disc: '7.4 误判心理学', role: '相对比较破坏团队合作的隐性机制', tier: 'guard' },
+      { name: '峰终定律', disc: '7.3 行为经济学与偏误', role: '表彰/复盘/离职面谈的设计：最后印象决定整体记忆', tier: 'tool' },
+      { name: '赫兹伯格双因素理论', disc: '9.5 人力资源管理', role: '保健因素防不满，激励因素促投入——两类不能混用', tier: 'tool' },
+      { name: '多巴胺与奖励回路', disc: '4.3 神经科学', role: '进度可见、即时反馈激活神经激励回路', tier: 'tool' },
+    ],
+    books: ['心理安全感', '给予者', '目标', '穷查理宝典'],
+  },
+  {
+    id: 'investment',
+    icon: '💰',
+    title: '如何评估一笔投资',
+    subtitle: '价值投资 × 宏观周期 × 风险管理三维框架',
+    color: '#4a7c9e',
+    context: '适用：股权投资判断、新业务立项、并购标的评估、资本配置决策',
+    steps: [
+      { phase: '护城河检验', desc: '5种护城河逐项评估：宽度×深度×趋势' },
+      { phase: '估值锚定', desc: 'DCF保守估算内在价值，设置安全边际' },
+      { phase: '宏观定位', desc: '判断债务周期位置，大类资产配置比例' },
+      { phase: '风险管理', desc: '用凯利公式确定仓位，识别黑天鹅尾部风险' },
+    ],
+    models: [
+      { name: '安全边际（格雷厄姆）', disc: '10.1 价值投资', role: '以显著低于内在价值的价格买入，用折扣对冲分析误差', tier: 'core' },
+      { name: '护城河理论（巴菲特·五种护城河）', disc: '10.1 价值投资', role: '判断超额利润是否可持续的结构性分析框架', tier: 'core' },
+      { name: '债务周期理论（达利欧·长短周期）', disc: '10.3 宏观与周期', role: '判断当前在75-100年长周期和5-8年短周期的位置', tier: 'core' },
+      { name: '贝叶斯推理（先验→后验）', disc: '2.1 概率论', role: '用新信息持续更新投资论点，避免过度锚定初始判断', tier: 'core' },
+      { name: '期望值思维', disc: '2.1 概率论', role: '比的不是单次胜率而是期望值=概率×赔率', tier: 'tool' },
+      { name: '凯利公式（最优仓位）', disc: '10.6 风险管理', role: '在给定胜率和赔率下计算最优投注比例', tier: 'tool' },
+      { name: '自由现金流估值（FCF）', disc: '10.2 财务分析', role: '穿透会计利润，看真实现金创造能力', tier: 'tool' },
+      { name: '反脆弱性', disc: '10.6 风险管理', role: '杠铃策略：极保守底仓+小比例高赔率头寸', tier: 'tool' },
+      { name: '过度自信（自视过高）', disc: '7.4 误判心理学', role: '投资者最常见致命偏误：高估自身判断准确率', tier: 'guard' },
+    ],
+    books: ['聪明的投资者', '穷查理宝典', '债务危机', '巴菲特的护城河'],
+  },
+  {
+    id: 'persuasion',
+    icon: '🎯',
+    title: '如何说服他人',
+    subtitle: '从心理学到叙事逻辑的影响力工具箱',
+    color: '#7a5c8f',
+    context: '适用：客户提案、内部汇报、团队动员、谈判斡旋、品牌传播',
+    steps: [
+      { phase: '理解动机', desc: '先挖掘对方的真实利益，而非应对其表面立场' },
+      { phase: '建立叙事', desc: '用故事结构而非逻辑清单承载信息' },
+      { phase: '激活原则', desc: '选择恰当的影响力原则：互惠/社会认同/稀缺' },
+      { phase: '设计峰终', desc: '开场制造峰值，结尾留下可记忆的行动锚点' },
+    ],
+    models: [
+      { name: '影响力六原则（西奥迪尼）', disc: '7.2 社会心理学', role: '互惠/承诺一致/社会认同/权威/喜好/稀缺六大触发机制', tier: 'core' },
+      { name: '叙事思维（Narrative Thinking）', disc: '6.1 叙事逻辑', role: '人类用故事而非数据做决策，叙事框架决定说服效果', tier: 'core' },
+      { name: '哈佛谈判原则（利益 vs 立场）', disc: '11.2 社交效能', role: '从立场层进入利益层，找到更大的解决方案空间', tier: 'core' },
+      { name: '峰终定律', disc: '7.3 行为经济学与偏误', role: '对方的记忆由峰值+终值决定，不是全程平均', tier: 'tool' },
+      { name: '锚定效应', disc: '7.3 行为经济学与偏误', role: '先出价设置锚点，让对方在你的参照系内调整', tier: 'tool' },
+      { name: '框架效应（Framing Effect）', disc: '6.1 叙事逻辑', role: '同一事实用不同框架表述，接受度可差2倍', tier: 'tool' },
+      { name: '互惠原则（回馈倾向）', disc: '7.4 误判心理学', role: '先给予价值触发还债冲动，降低后续请求的阻力', tier: 'tool' },
+      { name: '金字塔原理（麦肯锡·结论前置）', disc: '11.6 传播与表达', role: '结论先行+MECE理由，让汇报人在30秒内抓住重点', tier: 'tool' },
+    ],
+    books: ['影响力', '故事经济学', '谈判力', '金字塔原理'],
+  },
+  {
+    id: 'compounding',
+    icon: '🌱',
+    title: '如何建立个人复利系统',
+    subtitle: '技能×关系×资本的长期复利架构',
+    color: '#6b8f6b',
+    context: '适用：职业发展规划、个人知识体系建设、社交资本积累、财富规划',
+    steps: [
+      { phase: '识别复利资产', desc: '区分消耗型投入 vs 可积累型资产' },
+      { phase: '保证不中断', desc: '复利最大威胁是中断：建立保护机制' },
+      { phase: '刻意练习触发', desc: '技能复利需要刻意练习而非简单重复' },
+      { phase: '跨域连接', desc: '弱关系连接不同圈层，格栅思维产生洞见' },
+    ],
+    models: [
+      { name: '复利原理', disc: '2.5 复杂适应系统与非线性动力学', role: '时间×增长率的指数效应——早开始比多投入更重要', tier: 'core' },
+      { name: '刻意练习（艾利克森）', disc: '11.3 精神效能', role: '技能复利的触发器：舒适区边缘+即时反馈+专注重复', tier: 'core' },
+      { name: '神经可塑性', disc: '4.3 神经科学', role: '大脑可持续改变是技能复利的生物基础', tier: 'core' },
+      { name: '社会资本理论（格兰诺维特·弱关系的力量）', disc: '8.4 社会学', role: '弱关系连接不同圈层，是机会和信息的桥梁', tier: 'tool' },
+      { name: '熵增原理（孤立系统趋向无序）', disc: '3.2 热力学与熵', role: '技能/关系/健康不主动维护必然衰退——复利需要持续投入', tier: 'guard' },
+      { name: '深度工作（卡尔·纽波特）', disc: '11.1 时间效能', role: '注意力的稀缺性：只有深度工作才能触发真正的技能积累', tier: 'tool' },
+      { name: '路径依赖', disc: '4.1 进化论', role: '早期选择锁定后期轨迹——专注一个方向的复利远超分散', tier: 'tool' },
+      { name: '格栅思维', disc: '7.1 认知心理学', role: '跨学科模型的积累产生指数级认知复利', tier: 'tool' },
+      { name: '给予者-索取者-匹配者（格兰特）', disc: '11.2 社交效能', role: '长期给予者的社交资本积累模式，弱关系的维护策略', tier: 'tool' },
+    ],
+    books: ['穷查理宝典', '刻意练习', '深度工作', '给予者'],
+  },
+];
+
+// CSS
+const problemsCSS = `
+#view-problems{padding:2rem 3rem;min-height:60vh;}
+.problems-intro{margin-bottom:2rem;font-family:'JetBrains Mono',monospace;font-size:.65rem;color:var(--ink-dim);}
+.problems-intro strong{color:var(--gold);}
+.problems-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:1.2rem;}
+.problem-card{border:1px solid var(--ink-faint);background:var(--bg2);border-radius:2px;overflow:hidden;transition:all .3s;cursor:pointer;}
+.problem-card:hover{border-color:var(--gold-dim);transform:translateY(-2px);box-shadow:0 8px 30px rgba(0,0,0,.5);}
+.problem-card.expanded{border-color:var(--gold-dim);}
+.problem-header{padding:1.4rem 1.4rem 1rem;display:flex;align-items:flex-start;gap:1rem;}
+.problem-icon{font-size:1.6rem;line-height:1;flex-shrink:0;margin-top:.1rem;}
+.problem-title{font-size:1rem;font-weight:600;color:var(--ink);line-height:1.3;margin-bottom:.3rem;}
+.problem-subtitle{font-size:.68rem;color:var(--ink-dim);line-height:1.5;}
+.problem-context{font-family:'JetBrains Mono',monospace;font-size:.58rem;color:var(--ink-dim);padding:.6rem 1.4rem;background:rgba(255,255,255,.02);border-top:1px solid var(--ink-faint);}
+.problem-expand-btn{display:flex;align-items:center;justify-content:space-between;padding:.7rem 1.4rem;font-family:'JetBrains Mono',monospace;font-size:.6rem;color:var(--gold-dim);border-top:1px solid var(--ink-faint);cursor:pointer;transition:color .2s;}
+.problem-expand-btn:hover{color:var(--gold);}
+.problem-body{display:none;padding:1.2rem 1.4rem;border-top:1px solid var(--ink-faint);}
+.problem-card.expanded .problem-body{display:block;}
+.problem-card.expanded .problem-expand-btn{color:var(--gold);}
+
+.prob-section-title{font-family:'JetBrains Mono',monospace;font-size:.55rem;letter-spacing:.2em;text-transform:uppercase;color:var(--gold-dim);margin:.9rem 0 .5rem;}
+.prob-steps{display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:1rem;}
+.prob-step{padding:.3rem .7rem;font-size:.62rem;border:1px solid var(--ink-faint);color:var(--ink-dim);border-radius:1px;display:flex;gap:.4rem;align-items:center;}
+.prob-step-num{font-family:'JetBrains Mono',monospace;color:var(--gold-dim);font-size:.55rem;}
+
+.prob-models{display:flex;flex-direction:column;gap:.4rem;}
+.prob-model-row{display:flex;align-items:flex-start;gap:.6rem;padding:.5rem;border:1px solid var(--ink-faint);border-radius:1px;cursor:pointer;transition:all .2s;}
+.prob-model-row:hover{border-color:var(--gold-dim);background:rgba(201,168,76,.04);}
+.prob-model-tier{font-family:'JetBrains Mono',monospace;font-size:.5rem;padding:.15rem .35rem;border-radius:1px;flex-shrink:0;margin-top:.15rem;}
+.tier-core{background:rgba(201,168,76,.15);color:var(--gold);border:1px solid rgba(201,168,76,.3);}
+.tier-tool{background:rgba(74,124,158,.12);color:#6aa0c0;border:1px solid rgba(74,124,158,.25);}
+.tier-guard{background:rgba(158,74,74,.12);color:#c07070;border:1px solid rgba(158,74,74,.25);}
+.prob-model-info{flex:1;}
+.prob-model-name{font-size:.75rem;color:var(--ink);font-weight:500;line-height:1.3;}
+.prob-model-disc{font-family:'JetBrains Mono',monospace;font-size:.52rem;color:var(--ink-dim);margin:.1rem 0;}
+.prob-model-role{font-size:.64rem;color:var(--ink-dim);line-height:1.5;}
+
+.prob-books{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.3rem;}
+.prob-book-chip{font-size:.62rem;padding:.25rem .6rem;border:1px solid rgba(201,168,76,.3);color:var(--gold-dim);border-radius:1px;cursor:pointer;transition:all .2s;text-decoration:none;}
+.prob-book-chip:hover{background:rgba(201,168,76,.1);color:var(--gold);}
+
+@media(max-width:768px){#view-problems{padding:1.2rem;}.problems-grid{grid-template-columns:1fr;}}
+`;
+
+const styleEl = document.createElement('style');
+styleEl.textContent = problemsCSS;
+document.head.appendChild(styleEl);
+
+// RENDER
+function renderProblems() {
+  const container = document.getElementById('view-problems');
+  if (container.dataset.rendered) return;
+  container.dataset.rendered = '1';
+
+  container.innerHTML = `
+    <div class="problems-intro">
+      格栅思维的价值不在于"按学科存"，而在于"按问题取"——<strong>遇到真实场景，调取跨学科模型组合</strong>。<br>
+      点击任意场景展开，点击模型查看 WHY/WHAT/HOW，点击书目跳转微信读书。
+    </div>
+    <div class="problems-grid" id="problems-grid"></div>
+  `;
+
+  const grid = document.getElementById('problems-grid');
+
+  PROBLEMS.forEach(p => {
+    const card = document.createElement('div');
+    card.className = 'problem-card';
+    card.style.setProperty('--p-color', p.color);
+
+    const tierLabel = { core: '核心', tool: '工具', guard: '防误' };
+
+    const stepsHTML = p.steps.map((s, i) =>
+      `<div class="prob-step"><span class="prob-step-num">${i+1}</span><span><strong>${s.phase}</strong> ${s.desc}</span></div>`
+    ).join('');
+
+    const modelsHTML = p.models.map(m =>
+      `<div class="prob-model-row" onclick="openModel('${m.name.replace(/'/g,"\\'")}','${m.disc}')">
+        <span class="prob-model-tier tier-${m.tier}">${tierLabel[m.tier]}</span>
+        <div class="prob-model-info">
+          <div class="prob-model-name">${m.name}</div>
+          <div class="prob-model-disc">${m.disc}</div>
+          <div class="prob-model-role">${m.role}</div>
+        </div>
+      </div>`
+    ).join('');
+
+    const booksHTML = p.books.map(b => {
+      const url = `https://weread.qq.com/web/search/books?keyword=${encodeURIComponent(b)}`;
+      return `<a class="prob-book-chip" href="${url}" target="_blank">📖 《${b}》</a>`;
+    }).join('');
+
+    card.innerHTML = `
+      <div class="problem-header">
+        <div class="problem-icon">${p.icon}</div>
+        <div>
+          <div class="problem-title">${p.title}</div>
+          <div class="problem-subtitle">${p.subtitle}</div>
+        </div>
+      </div>
+      <div class="problem-context">📍 ${p.context}</div>
+      <div class="problem-expand-btn" onclick="toggleProblem(this)">
+        <span>展开 · ${p.models.length}个模型 · ${p.steps.length}步流程</span>
+        <span>▼</span>
+      </div>
+      <div class="problem-body">
+        <div class="prob-section-title">// 解题步骤</div>
+        <div class="prob-steps">${stepsHTML}</div>
+        <div class="prob-section-title">// 跨学科模型工具箱
+          <span style="font-size:.5rem;color:var(--ink-dim);text-transform:none;letter-spacing:0;margin-left:.5rem">
+            <span style="color:#c9a84c">■</span> 核心框架
+            <span style="color:#6aa0c0;margin-left:.5rem">■</span> 工具技法
+            <span style="color:#c07070;margin-left:.5rem">■</span> 防误护盾 · 点击查看详情
+          </span>
+        </div>
+        <div class="prob-models">${modelsHTML}</div>
+        <div class="prob-section-title">// 配套书目（点击跳转微信读书）</div>
+        <div class="prob-books">${booksHTML}</div>
+      </div>
+    `;
+
+    grid.appendChild(card);
+  });
+}
+
+function toggleProblem(btn) {
+  const card = btn.closest('.problem-card');
+  const isExpanded = card.classList.toggle('expanded');
+  btn.querySelector('span:last-child').textContent = isExpanded ? '▲' : '▼';
 }
 </script>
 
