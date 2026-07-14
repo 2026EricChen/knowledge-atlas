@@ -219,6 +219,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
   <div class="nav-tab" onclick="switchView('books')">书单图书馆</div>
   <div class="nav-tab" onclick="switchView('graph')">知识图谱</div>
   <div class="nav-tab" onclick="switchView('problems')">问题索引</div>
+  <div class="nav-tab" onclick="switchView('upload')">✚ 读书更新</div>
 </nav>
 
 <main class="main">
@@ -360,6 +361,14 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 
 <!-- PROBLEMS VIEW -->
 <div id="view-problems" style="display:none"></div>
+
+<!-- UPLOAD VIEW -->
+<div id="view-upload" style="display:none">
+  <div id="upload-step1"></div>
+  <div id="upload-step2" style="display:none"></div>
+  <div id="upload-step3" style="display:none"></div>
+  <div id="upload-step4" style="display:none"></div>
+</div>
 
 <!-- MODEL MODAL -->
 <div class="modal-overlay" id="modal-overlay" onclick="closeModalOnBg(event)">
@@ -899,6 +908,7 @@ function switchView(view){
   document.getElementById('view-books').style.display=view==='books'?'block':'none';
   document.getElementById('view-graph').style.display=view==='graph'?'block':'none';
   document.getElementById('view-problems').style.display=view==='problems'?'block':'none';
+  document.getElementById('view-upload').style.display=view==='upload'?'block':'none';
   document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
   const tabs=document.querySelectorAll('.nav-tab');
   if(view==='atlas')tabs[0].classList.add('active');
@@ -906,9 +916,11 @@ function switchView(view){
   if(view==='books')tabs[2].classList.add('active');
   if(view==='graph')tabs[3].classList.add('active');
   if(view==='problems')tabs[4].classList.add('active');
+  if(view==='upload')tabs[5].classList.add('active');
   if(view==='books')renderBooks('all');
   if(view==='graph')initGraph();
   if(view==='problems')renderProblems();
+  if(view==='upload')initUploadView();
 }
 
 // ════════════════════════════════════════
@@ -1084,6 +1096,718 @@ function filterBooks(filter,btn){
   document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
   renderBooks(filter);
+}
+</script>
+
+<!-- UPLOAD VIEW CSS + JS -->
+<script>
+// ════════════════════════════════════════════════════════
+// 读书更新模块 — Word上传 → 解析 → 模型匹配 → GitHub推送
+// ════════════════════════════════════════════════════════
+
+// ── 注入CSS
+(function(){
+  const css = `
+/* UPLOAD VIEW */
+#view-upload{padding:2rem 3rem;min-height:60vh;}
+
+/* 步骤指示器 */
+.upload-stepper{display:flex;align-items:center;gap:0;margin-bottom:2.5rem;}
+.upload-step-item{display:flex;align-items:center;gap:.5rem;font-family:'JetBrains Mono',monospace;font-size:.6rem;color:var(--ink-dim);letter-spacing:.1em;}
+.upload-step-num{width:22px;height:22px;border-radius:50%;border:1px solid var(--ink-faint);display:flex;align-items:center;justify-content:center;font-size:.6rem;flex-shrink:0;transition:all .3s;}
+.upload-step-item.active .upload-step-num{background:var(--gold);border-color:var(--gold);color:var(--bg);}
+.upload-step-item.done .upload-step-num{background:var(--green-accent,#2e5c3a);border-color:var(--green-accent,#2e5c3a);color:#fff;}
+.upload-step-item.active .upload-step-label{color:var(--gold);}
+.upload-step-divider{width:40px;height:1px;background:var(--ink-faint);margin:0 .5rem;flex-shrink:0;}
+
+/* 拖放区 */
+.upload-dropzone{border:2px dashed var(--ink-faint);border-radius:2px;padding:3rem 2rem;text-align:center;transition:all .3s;cursor:pointer;background:var(--bg2);}
+.upload-dropzone:hover,.upload-dropzone.dragover{border-color:var(--gold-dim);background:rgba(201,168,76,.04);}
+.upload-dropzone .dz-icon{font-size:2.5rem;margin-bottom:.8rem;opacity:.5;}
+.upload-dropzone .dz-title{font-size:.9rem;color:var(--ink);margin-bottom:.4rem;}
+.upload-dropzone .dz-hint{font-size:.7rem;color:var(--ink-dim);}
+.upload-dropzone .dz-fallback{margin-top:1.2rem;}
+.upload-btn{display:inline-flex;align-items:center;gap:.5rem;padding:.5rem 1.2rem;border:1px solid var(--gold-dim);background:transparent;color:var(--gold);font-family:'JetBrains Mono',monospace;font-size:.65rem;cursor:pointer;border-radius:1px;transition:all .25s;letter-spacing:.1em;}
+.upload-btn:hover{background:var(--gold-dim);color:var(--bg);}
+.upload-btn.primary{background:var(--gold-dim);color:var(--bg);}
+.upload-btn.primary:hover{background:var(--gold);border-color:var(--gold);}
+.upload-btn:disabled{opacity:.4;cursor:not-allowed;}
+
+/* token区 */
+.token-section{margin-top:1.5rem;padding:1rem 1.2rem;border:1px solid var(--ink-faint);background:var(--bg2);border-radius:2px;}
+.token-label{font-family:'JetBrains Mono',monospace;font-size:.6rem;color:var(--gold-dim);letter-spacing:.15em;text-transform:uppercase;margin-bottom:.5rem;}
+.token-row{display:flex;gap:.6rem;align-items:center;}
+.token-input{flex:1;background:var(--bg3,#1a1a17);border:1px solid var(--ink-faint);color:var(--ink);font-family:'JetBrains Mono',monospace;font-size:.65rem;padding:.4rem .7rem;border-radius:1px;outline:none;}
+.token-input:focus{border-color:var(--gold-dim);}
+.token-hint{font-size:.6rem;color:var(--ink-dim);margin-top:.4rem;}
+.token-hint a{color:var(--gold-dim);text-decoration:none;}
+.token-hint a:hover{color:var(--gold);}
+
+/* 表单区 */
+.upload-form{display:flex;flex-direction:column;gap:1rem;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem;}
+.form-group{display:flex;flex-direction:column;gap:.4rem;}
+.form-label{font-family:'JetBrains Mono',monospace;font-size:.58rem;color:var(--gold-dim);letter-spacing:.15em;text-transform:uppercase;}
+.form-input{background:var(--bg3,#1a1a17);border:1px solid var(--ink-faint);color:var(--ink);font-family:'Noto Serif SC',serif;font-size:.8rem;padding:.5rem .8rem;border-radius:1px;outline:none;transition:border-color .2s;}
+.form-input:focus{border-color:var(--gold-dim);}
+.form-select{background:var(--bg3,#1a1a17);border:1px solid var(--ink-faint);color:var(--ink);font-family:'Noto Serif SC',serif;font-size:.75rem;padding:.5rem .8rem;border-radius:1px;outline:none;}
+.form-select:focus{border-color:var(--gold-dim);}
+.form-textarea{resize:vertical;min-height:80px;}
+.form-hint{font-size:.6rem;color:var(--ink-dim);}
+
+/* 模型候选卡 */
+.model-candidates{display:flex;flex-direction:column;gap:.5rem;max-height:420px;overflow-y:auto;}
+.model-cand-item{display:flex;align-items:flex-start;gap:.8rem;padding:.7rem .9rem;border:1px solid var(--ink-faint);background:var(--bg2);border-radius:1px;cursor:pointer;transition:all .2s;}
+.model-cand-item:hover,.model-cand-item.checked{border-color:var(--gold-dim);background:rgba(201,168,76,.04);}
+.model-cand-cb{margin-top:.15rem;flex-shrink:0;accent-color:var(--gold);}
+.model-cand-info{flex:1;}
+.model-cand-name{font-size:.8rem;color:var(--ink);font-weight:500;}
+.model-cand-disc{font-family:'JetBrains Mono',monospace;font-size:.55rem;color:var(--ink-dim);margin:.1rem 0;}
+.model-cand-score{font-family:'JetBrains Mono',monospace;font-size:.52rem;color:var(--gold-dim);}
+.model-search{width:100%;background:var(--bg3,#1a1a17);border:1px solid var(--ink-faint);color:var(--ink);font-family:'JetBrains Mono',monospace;font-size:.65rem;padding:.45rem .8rem;border-radius:1px;outline:none;margin-bottom:.8rem;}
+.model-search:focus{border-color:var(--gold-dim);}
+
+/* 状态横幅 */
+.upload-banner{padding:.7rem 1rem;border-radius:1px;font-size:.75rem;margin-bottom:1rem;display:flex;align-items:center;gap:.6rem;}
+.banner-success{background:rgba(46,92,58,.2);border:1px solid rgba(46,92,58,.4);color:#6b9e7a;}
+.banner-error{background:rgba(139,46,46,.15);border:1px solid rgba(139,46,46,.35);color:#c07070;}
+.banner-loading{background:rgba(201,168,76,.08);border:1px solid rgba(201,168,76,.2);color:var(--gold-dim);}
+
+/* 预览卡 */
+.upload-preview{margin-bottom:1.5rem;}
+.preview-title{font-family:'JetBrains Mono',monospace;font-size:.6rem;color:var(--gold-dim);letter-spacing:.2em;text-transform:uppercase;margin-bottom:.8rem;}
+
+/* 按钮行 */
+.upload-actions{display:flex;gap:.8rem;margin-top:1.5rem;flex-wrap:wrap;}
+
+/* 分段线 */
+.upload-divider{height:1px;background:var(--ink-faint);margin:1.2rem 0;}
+
+@media(max-width:768px){
+  #view-upload{padding:1.2rem;}
+  .form-row{grid-template-columns:1fr;}
+}
+`;
+  const s = document.createElement('style');
+  s.textContent = css;
+  document.head.appendChild(s);
+})();
+
+// ── 学科编号映射
+const DISC_LABELS = {
+  'disc-1':'1. 哲学','disc-2':'2. 数学/统计','disc-3':'3. 自然科学',
+  'disc-4':'4. 生命科学','disc-5':'5. 历史学','disc-6':'6. 语言学/人文',
+  'disc-7':'7. 心理学/行为科学','disc-8':'8. 经济学/社会科学',
+  'disc-9':'9. 管理学','disc-10':'10. 投资与商业','disc-11':'11. 个人效能'
+};
+
+// ── 学科扩充关键词（disc → 权重词）
+const DISC_KEYWORDS = {
+  'disc-1':['哲学','认识论','逻辑','伦理','形而上','本体','现象','辩证','苏格拉底','亚里士多德','康德','柏拉图'],
+  'disc-2':['数学','概率','统计','博弈','算法','信息论','复杂系统','混沌','涌现','微积分'],
+  'disc-3':['物理','量子','相对论','热力学','熵','宇宙','化学','天文','自然规律'],
+  'disc-4':['生物','进化','基因','神经','大脑','意识','遗传','生态','物种','DNA'],
+  'disc-5':['历史','朝代','文明','战争','帝国','中国史','世界史','考古','改革开放','近代'],
+  'disc-6':['语言','叙事','隐喻','修辞','符号','叙述','框架','故事','传播','话语'],
+  'disc-7':['心理','认知','偏见','偏误','行为','情绪','意识','潜意识','卡尼曼','误判','偏差','记忆'],
+  'disc-8':['经济','货币','财政','制度','市场','政治经济','社会学','人类学','宏观','微观','GDP','通胀'],
+  'disc-9':['管理','组织','领导力','战略','运营','营销','人力资源','德鲁克','绩效','团队','企业'],
+  'disc-10':['投资','价值','股票','财报','商业模式','创业','护城河','估值','巴菲特','芒格','风险','资本'],
+  'disc-11':['习惯','效率','时间管理','学习','健康','睡眠','运动','沟通','谈判','写作','表达','个人']
+};
+
+// ── Step状态管理
+let uploadState = {
+  step: 1,
+  parsedData: null,
+  formData: null,
+  selectedModels: [],
+  bookEntry: null,
+  ghToken: '',
+  mammothLoaded: false
+};
+
+// ── 初始化（懒加载）
+function initUploadView() {
+  if (document.getElementById('upload-step1').innerHTML) return;
+  renderUploadStep1();
+  // 尝试从localStorage读token
+  uploadState.ghToken = localStorage.getItem('gh_pat') || '';
+}
+
+// ── 步骤指示器
+function renderStepper(currentStep) {
+  const steps = ['上传文档','确认信息','选择模型','预览推送'];
+  return `<div class="upload-stepper">
+    ${steps.map((s,i) => {
+      const n = i+1;
+      const cls = n < currentStep ? 'done' : n === currentStep ? 'active' : '';
+      const icon = n < currentStep ? '✓' : n;
+      return `${i>0?'<div class="upload-step-divider"></div>':''}
+        <div class="upload-step-item ${cls}">
+          <div class="upload-step-num">${icon}</div>
+          <span class="upload-step-label">${s}</span>
+        </div>`;
+    }).join('')}
+  </div>`;
+}
+
+// ── Step 1: 上传区
+function renderUploadStep1() {
+  const s1 = document.getElementById('upload-step1');
+  s1.innerHTML = `
+    ${renderStepper(1)}
+    <div class="upload-dropzone" id="upload-dz" onclick="document.getElementById('upload-file-input').click()">
+      <div class="dz-icon">📄</div>
+      <div class="dz-title">拖放读书笔记到这里</div>
+      <div class="dz-hint">支持 .docx Word 文档 · 点击或拖放上传</div>
+      <div class="dz-fallback">
+        <button class="upload-btn" onclick="event.stopPropagation();document.getElementById('upload-file-input').click()">选择文件</button>
+      </div>
+    </div>
+    <input type="file" id="upload-file-input" accept=".docx,.doc,.txt" style="display:none" onchange="handleFileSelect(this.files[0])">
+
+    <div class="token-section">
+      <div class="token-label">// GitHub Token（用于推送更新到团队链接）</div>
+      <div class="token-row">
+        <input type="password" class="token-input" id="gh-token-input" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"
+          value="${uploadState.ghToken}" oninput="uploadState.ghToken=this.value;localStorage.setItem('gh_pat',this.value)">
+        <button class="upload-btn" onclick="testGhToken()">验证</button>
+      </div>
+      <div class="token-hint">
+        Token 保存在浏览器本地，只需输入一次。
+        <a href="https://github.com/settings/tokens/new?scopes=repo&description=knowledge-atlas" target="_blank">点击生成 Token →</a>
+      </div>
+    </div>
+    <div id="upload-banner1"></div>
+  `;
+
+  // 拖放事件
+  const dz = document.getElementById('upload-dz');
+  dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('dragover'); });
+  dz.addEventListener('dragleave', () => dz.classList.remove('dragover'));
+  dz.addEventListener('drop', e => {
+    e.preventDefault(); dz.classList.remove('dragover');
+    const f = e.dataTransfer.files[0];
+    if (f) handleFileSelect(f);
+  });
+}
+
+// ── 处理文件选择
+async function handleFileSelect(file) {
+  if (!file) return;
+  showBanner('upload-banner1', 'loading', `正在解析「${file.name}」...`);
+
+  // txt 直接读取
+  if (file.name.endsWith('.txt')) {
+    const text = await file.text();
+    const parsed = parseTextContent(text, file.name);
+    uploadState.parsedData = parsed;
+    goToStep2();
+    return;
+  }
+
+  // docx: 懒加载 mammoth
+  if (!uploadState.mammothLoaded) {
+    await loadMammoth();
+  }
+
+  try {
+    const buf = await file.arrayBuffer();
+    const result = await mammoth.extractRawText({ arrayBuffer: buf });
+    const parsed = parseTextContent(result.value, file.name);
+    uploadState.parsedData = parsed;
+    goToStep2();
+  } catch(e) {
+    showBanner('upload-banner1', 'error', `解析失败：${e.message}。请尝试另存为 .txt 后上传。`);
+  }
+}
+
+// ── 加载 mammoth.js
+function loadMammoth() {
+  return new Promise((resolve, reject) => {
+    if (window.mammoth) { uploadState.mammothLoaded = true; resolve(); return; }
+    const s = document.createElement('script');
+    s.src = 'https://cdn.jsdelivr.net/npm/mammoth@1.8.0/mammoth.browser.min.js';
+    s.onload = () => { uploadState.mammothLoaded = true; resolve(); };
+    s.onerror = () => reject(new Error('mammoth.js CDN 加载失败'));
+    document.head.appendChild(s);
+  });
+}
+
+// ── 文本解析
+function parseTextContent(text, filename) {
+  const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+
+  // 书名：从文件名去掉扩展名，或者找《》包裹的内容
+  let title = filename.replace(/\.[^.]+$/, '').replace(/[读书笔记|书摘|摘录|总结]+/g, '').trim();
+  const titleMatch = text.match(/[《「『]([^》」』]{1,30})[》」』]/);
+  if (titleMatch) title = titleMatch[1];
+
+  // 作者：找"作者：" / "[作者]" / "著"
+  let author = '';
+  const authorMatch = text.match(/作者[：:]\s*([^\n,，。]{1,20})/);
+  if (authorMatch) author = authorMatch[1].trim();
+
+  // 核心洞见：取最长的3段（超过50字的段落）
+  const insights = lines
+    .filter(l => l.length > 50 && l.length < 500)
+    .sort((a, b) => b.length - a.length)
+    .slice(0, 3)
+    .join('\n\n');
+
+  // 金句：找引号包裹、或"—"开头的行
+  const quotes = lines
+    .filter(l => (l.startsWith('—') || l.startsWith('「') || l.startsWith('"') || l.startsWith('"')) && l.length < 200)
+    .slice(0, 5);
+
+  return { title, author, insights, quotes, rawText: text };
+}
+
+// ── 学科评分
+function scoreDiscs(text) {
+  const scores = {};
+  Object.keys(DISC_KEYWORDS).forEach(disc => {
+    scores[disc] = 0;
+    DISC_KEYWORDS[disc].forEach(kw => {
+      const re = new RegExp(kw, 'g');
+      const matches = (text.match(re) || []).length;
+      scores[disc] += matches * (kw.length >= 3 ? 2 : 1);
+    });
+  });
+  // 从 disciplines 数组补充评分
+  disciplines.forEach(d => {
+    const discId = `disc-${d.id+1}`;
+    d.subs.forEach(sub => {
+      sub.models.forEach(m => {
+        const base = m.split('（')[0].trim();
+        if (base.length >= 2 && text.includes(base)) scores[discId] = (scores[discId]||0) + 2;
+      });
+    });
+  });
+  return Object.entries(scores).sort((a,b) => b[1]-a[1]).slice(0,3).map(([disc]) => disc);
+}
+
+// ── 模型匹配
+function matchModels(text, topN=10) {
+  const results = [];
+  const textLow = text.toLowerCase();
+  const topDiscs = new Set(scoreDiscs(text));
+
+  Object.keys(modelData).forEach(name => {
+    let score = 0;
+    const base = name.split('（')[0].split('·')[0].trim();
+    if (base.length >= 2) {
+      const cnt = (text.match(new RegExp(base, 'g')) || []).length;
+      score += cnt * 8;
+    }
+    // why/what 字段词重叠
+    const m = modelData[name];
+    if (m) {
+      const combined = (m.why||'') + ' ' + (m.what||'');
+      // 简单3-gram滑窗
+      for (let i = 0; i < combined.length - 2; i++) {
+        const tri = combined.slice(i, i+3);
+        if (tri.length === 3 && text.includes(tri)) score += 0.5;
+      }
+      // 学科加权
+      const discNum = (m.disc||'').match(/\d+/)?.[0];
+      if (discNum && topDiscs.has(`disc-${discNum}`)) score += 3;
+    }
+    if (score > 0) results.push({ name, score, disc: m?.disc||'' });
+  });
+
+  return results.sort((a,b) => b.score-a.score).slice(0, topN);
+}
+
+// ── Step 2: 确认信息
+function goToStep2() {
+  const pd = uploadState.parsedData;
+  const topDiscs = scoreDiscs(pd.rawText);
+  const defDisc = topDiscs[0] || 'disc-9';
+
+  // 构建学科选项
+  const discOpts = Object.entries(DISC_LABELS).map(([v,l]) =>
+    `<option value="${v}" ${v===defDisc?'selected':''}>${l}</option>`
+  ).join('');
+
+  // 构建二级分类选项（根据默认学科）
+  const defDiscObj = disciplines.find(d => `disc-${d.id+1}` === defDisc);
+  const subOpts = defDiscObj ? defDiscObj.subs.map(s =>
+    `<option value="${s.num} ${s.name}">${s.num} ${s.name}</option>`
+  ).join('') : '<option>请先选择学科</option>';
+
+  document.getElementById('upload-step1').style.display = 'none';
+  const s2 = document.getElementById('upload-step2');
+  s2.style.display = 'block';
+  s2.innerHTML = `
+    ${renderStepper(2)}
+    <div class="upload-form">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">书名</label>
+          <input class="form-input" id="f-title" value="${pd.title}" placeholder="书名">
+        </div>
+        <div class="form-group">
+          <label class="form-label">作者</label>
+          <input class="form-input" id="f-author" value="${pd.author}" placeholder="作者">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">归属学科</label>
+          <select class="form-select" id="f-disc" onchange="updateSubOptions(this.value)">${discOpts}</select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">二级分类</label>
+          <select class="form-select" id="f-sub">${subOpts}</select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">优先梯队</label>
+          <select class="form-select" id="f-tier">
+            <option value="tier1">第一梯队 · 立即读</option>
+            <option value="tier2" selected>第二梯队 · 年内读</option>
+            <option value="tier3">第三梯队 · 按兴趣</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">状态</label>
+          <select class="form-select" id="f-status">
+            <option value="owned" selected>✅ 已读</option>
+            <option value="new">⭐ 待读</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">一句话定位（这本书在知识体系中的作用）</label>
+        <input class="form-input" id="f-note" placeholder="例：进化视角理解人类行为，连接生命科学与心理学"
+          value="${pd.insights.slice(0,80)}">
+      </div>
+      <div class="form-group">
+        <label class="form-label">读书心得 <span class="form-hint">（用于模型匹配，不存入书单）</span></label>
+        <textarea class="form-input form-textarea" id="f-insights">${pd.insights}</textarea>
+      </div>
+    </div>
+    <div class="upload-actions">
+      <button class="upload-btn" onclick="backToStep1()">← 重新上传</button>
+      <button class="upload-btn primary" onclick="goToStep3()">确认，选择心智模型 →</button>
+    </div>
+  `;
+}
+
+// ── 更新二级分类选项
+function updateSubOptions(discVal) {
+  const disc = disciplines.find(d => `disc-${d.id+1}` === discVal);
+  const subSel = document.getElementById('f-sub');
+  if (!disc || !subSel) return;
+  subSel.innerHTML = disc.subs.map(s =>
+    `<option value="${s.num} ${s.name}">${s.num} ${s.name}</option>`
+  ).join('');
+}
+
+// ── Step 3: 选择模型
+function goToStep3() {
+  const insights = document.getElementById('f-insights')?.value || uploadState.parsedData.rawText;
+  const title = document.getElementById('f-title')?.value || '';
+  const fullText = insights + ' ' + title;
+
+  uploadState.formData = {
+    title:  document.getElementById('f-title').value.trim(),
+    author: document.getElementById('f-author').value.trim(),
+    disc:   document.getElementById('f-disc').value,
+    sub:    document.getElementById('f-sub').value,
+    tier:   document.getElementById('f-tier').value,
+    status: document.getElementById('f-status').value,
+    note:   document.getElementById('f-note').value.trim(),
+  };
+
+  // 检查书名是否已存在
+  const exists = books.some(b => b.title === uploadState.formData.title);
+  if (exists) {
+    alert(`书单中已有《${uploadState.formData.title}》，请修改书名或返回`);
+    return;
+  }
+
+  const candidates = matchModels(fullText, 12);
+  uploadState.selectedModels = [];
+
+  document.getElementById('upload-step2').style.display = 'none';
+  const s3 = document.getElementById('upload-step3');
+  s3.style.display = 'block';
+  s3.innerHTML = `
+    ${renderStepper(3)}
+    <div style="margin-bottom:.8rem;font-size:.75rem;color:var(--ink-dim)">
+      根据读书心得自动匹配了以下心智模型，勾选最相关的（最多6个）。也可以搜索手动添加。
+    </div>
+    <input class="model-search" id="model-search-input" placeholder="搜索模型名称..." oninput="filterModelSearch(this.value)">
+    <div class="model-candidates" id="model-cand-list">
+      ${candidates.map(c => `
+        <div class="model-cand-item" id="cand-${CSS.escape(c.name)}" onclick="toggleModelCandidate('${c.name.replace(/'/g,"\\'")}',this)">
+          <input type="checkbox" class="model-cand-cb" onchange="toggleModelCandidate('${c.name.replace(/'/g,"\\'")}',this.closest('.model-cand-item'))">
+          <div class="model-cand-info">
+            <div class="model-cand-name">${c.name}</div>
+            <div class="model-cand-disc">${c.disc}</div>
+            <div class="model-cand-score">匹配度：${'▮'.repeat(Math.min(10,Math.round(c.score/3)))}${'▯'.repeat(10-Math.min(10,Math.round(c.score/3)))}</div>
+          </div>
+        </div>`).join('')}
+    </div>
+    <div id="selected-count" style="font-family:'JetBrains Mono',monospace;font-size:.6rem;color:var(--gold-dim);margin-top:.8rem">已选 0 / 6 个模型</div>
+    <div class="upload-actions">
+      <button class="upload-btn" onclick="backToStep2()">← 返回</button>
+      <button class="upload-btn primary" onclick="goToStep4()">确认，预览条目 →</button>
+    </div>
+  `;
+}
+
+// ── 模型搜索过滤
+function filterModelSearch(q) {
+  if (!q.trim()) {
+    document.querySelectorAll('.model-cand-item').forEach(el => el.style.display='flex');
+    return;
+  }
+  const qLow = q.toLowerCase();
+  // 先显示已有候选中匹配的
+  let found = false;
+  document.querySelectorAll('.model-cand-item').forEach(el => {
+    const name = el.querySelector('.model-cand-name')?.textContent||'';
+    el.style.display = name.toLowerCase().includes(qLow) ? 'flex' : 'none';
+    if (name.toLowerCase().includes(qLow)) found = true;
+  });
+  // 从全部模型搜索
+  if (!found) {
+    const allMatches = Object.keys(modelData).filter(k => k.includes(q)).slice(0,5);
+    const list = document.getElementById('model-cand-list');
+    // 清除之前添加的临时搜索结果
+    list.querySelectorAll('.model-cand-search-result').forEach(e => e.remove());
+    allMatches.forEach(name => {
+      const item = document.createElement('div');
+      item.className = 'model-cand-item model-cand-search-result';
+      item.innerHTML = `
+        <input type="checkbox" class="model-cand-cb" onchange="toggleModelCandidate('${name.replace(/'/g,"\\'")}',this.closest('.model-cand-item'))">
+        <div class="model-cand-info">
+          <div class="model-cand-name">${name}</div>
+          <div class="model-cand-disc">${modelData[name]?.disc||''}</div>
+          <div class="model-cand-score">搜索结果</div>
+        </div>`;
+      item.onclick = e => { if(e.target.tagName!=='INPUT') toggleModelCandidate(name, item); };
+      list.appendChild(item);
+    });
+  }
+}
+
+// ── 切换模型选择
+function toggleModelCandidate(name, el) {
+  const cb = el.querySelector('input[type=checkbox]');
+  const idx = uploadState.selectedModels.indexOf(name);
+  if (idx === -1) {
+    if (uploadState.selectedModels.length >= 6) {
+      alert('最多选择6个模型');
+      return;
+    }
+    uploadState.selectedModels.push(name);
+    el.classList.add('checked');
+    if (cb) cb.checked = true;
+  } else {
+    uploadState.selectedModels.splice(idx, 1);
+    el.classList.remove('checked');
+    if (cb) cb.checked = false;
+  }
+  const cnt = document.getElementById('selected-count');
+  if (cnt) cnt.textContent = `已选 ${uploadState.selectedModels.length} / 6 个模型`;
+}
+
+// ── Step 4: 预览 + 推送
+function goToStep4() {
+  const fd = uploadState.formData;
+  uploadState.bookEntry = {
+    title: fd.title, author: fd.author,
+    disc: fd.disc, sub: fd.sub,
+    status: fd.status, tier: fd.tier,
+    note: fd.note,
+    models: uploadState.selectedModels
+  };
+
+  const entry = uploadState.bookEntry;
+  const modelsHTML = entry.models.map(m =>
+    `<span class="book-model-chip" onclick="openModel('${m.replace(/'/g,"\\'")}','')">${m.length>20?m.slice(0,20)+'…':m}</span>`
+  ).join('');
+  const tierLabel = entry.tier==='tier1'?'第一梯队 · 立即读':entry.tier==='tier2'?'第二梯队 · 年内读':'第三梯队 · 按兴趣';
+  const wereadUrl = `https://weread.qq.com/web/search/books?keyword=${encodeURIComponent(entry.title+' '+entry.author)}`;
+
+  document.getElementById('upload-step3').style.display='none';
+  const s4 = document.getElementById('upload-step4');
+  s4.style.display='block';
+  s4.innerHTML = `
+    ${renderStepper(4)}
+    <div class="preview-title">// 预览书单条目</div>
+    <div class="upload-preview">
+      <div class="book-card ${entry.status==='owned'?'owned':'recommend'} ${entry.tier}" style="max-width:400px">
+        <div class="book-tier">${tierLabel}</div>
+        <div class="book-title">《${entry.title}》</div>
+        <div class="book-author">${entry.author}</div>
+        <div class="book-note">${entry.note}</div>
+        ${modelsHTML ? `<div style="margin-bottom:.5rem"><div style="font-family:'JetBrains Mono',monospace;font-size:.5rem;color:var(--gold-dim);letter-spacing:.15em;margin-bottom:.4rem;text-transform:uppercase">// 涵盖模型</div><div class="book-models-row">${modelsHTML}</div></div>` : ''}
+        <div class="book-footer">
+          <div class="book-tags">
+            <span class="book-tag tag-disc">${entry.sub}</span>
+            <span class="book-tag ${entry.status==='owned'?'tag-owned':'tag-new'}">${entry.status==='owned'?'✅ 已读':'⭐ 待读'}</span>
+          </div>
+          <a class="weread-btn" href="${wereadUrl}" target="_blank">微信读书 →</a>
+        </div>
+      </div>
+    </div>
+    <div id="upload-banner4"></div>
+    <div class="upload-actions">
+      <button class="upload-btn" onclick="backToStep3()">← 返回调整</button>
+      <button class="upload-btn primary" onclick="addLocalOnly()">仅本地添加（不推送）</button>
+      <button class="upload-btn primary" id="push-btn" onclick="pushUpdate()" ${!uploadState.ghToken?'disabled title="请先在Step1输入GitHub Token"':''}>
+        🚀 推送到 GitHub（团队同步可见）
+      </button>
+    </div>
+  `;
+}
+
+// ── 本地添加
+function addLocalOnly() {
+  const entry = uploadState.bookEntry;
+  books.push(entry);
+  renderBooks('all');
+  switchView('books');
+  showBanner('upload-banner4','success',`《${entry.title}》已添加到书单（本地），刷新页面后会消失，推送后永久保存`);
+}
+
+// ── GitHub 推送
+async function pushUpdate() {
+  const btn = document.getElementById('push-btn');
+  const token = uploadState.ghToken;
+  if (!token) { alert('请先输入 GitHub Token'); return; }
+
+  btn.disabled = true;
+  btn.textContent = '推送中...';
+  showBanner('upload-banner4','loading','正在获取文件信息...');
+
+  const owner = '2026EricChen';
+  const repo  = 'knowledge-atlas';
+  const path  = 'knowledge-atlas.html';
+  const headers = { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' };
+
+  try {
+    // 1. 获取当前 SHA + 内容
+    showBanner('upload-banner4','loading','获取当前文件 SHA...');
+    const metaRes = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`, {headers});
+    if (!metaRes.ok) {
+      const err = await metaRes.json();
+      if (metaRes.status === 401) { localStorage.removeItem('gh_pat'); throw new Error('Token 无效或已过期，请重新输入'); }
+      throw new Error(err.message || `HTTP ${metaRes.status}`);
+    }
+    const meta = await metaRes.json();
+    const sha = meta.sha;
+
+    // 2. 解码当前 HTML + 插入新条目
+    showBanner('upload-banner4','loading','处理文件内容...');
+    const currentHtml = new TextDecoder().decode(
+      Uint8Array.from(atob(meta.content.replace(/\n/g,'')), c => c.charCodeAt(0))
+    );
+    const newHtml = insertBookToHtmlString(currentHtml, uploadState.bookEntry);
+
+    // 3. Base64 编码（中文安全）
+    const bytes = new TextEncoder().encode(newHtml);
+    const CHUNK = 65536;
+    let b64 = '';
+    for (let i = 0; i < bytes.length; i += CHUNK) {
+      b64 += String.fromCharCode(...bytes.subarray(i, i + CHUNK));
+    }
+    const newBase64 = btoa(b64);
+
+    // 4. PUT 更新
+    showBanner('upload-banner4','loading','推送到 GitHub...');
+    const putRes = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`, {
+      method: 'PUT',
+      headers,
+      body: JSON.stringify({
+        message: `feat: 新增《${uploadState.bookEntry.title}》— ${uploadState.bookEntry.disc} ${uploadState.bookEntry.sub}`,
+        content: newBase64,
+        sha: sha
+      })
+    });
+
+    if (putRes.status === 409 || putRes.status === 422) {
+      // SHA 冲突，重试一次
+      showBanner('upload-banner4','loading','SHA 冲突，重新获取后重试...');
+      btn.disabled = false;
+      btn.textContent = '🚀 推送到 GitHub（重试）';
+      return;
+    }
+
+    if (!putRes.ok) {
+      const err = await putRes.json();
+      throw new Error(err.message || `HTTP ${putRes.status}`);
+    }
+
+    // 成功
+    books.push(uploadState.bookEntry);
+    renderBooks('all');
+    btn.textContent = '✅ 推送成功';
+    showBanner('upload-banner4','success',
+      `《${uploadState.bookEntry.title}》已推送！GitHub Pages 约1分钟后更新：<a href="https://2026EricChen.github.io/knowledge-atlas/" target="_blank" style="color:var(--gold)">查看 →</a>`
+    );
+
+  } catch(e) {
+    btn.disabled = false;
+    btn.textContent = '🚀 推送到 GitHub';
+    showBanner('upload-banner4','error',`推送失败：${e.message}`);
+  }
+}
+
+// ── 在 HTML 字符串中插入新书条目
+function insertBookToHtmlString(html, entry) {
+  const entryStr = `  {title:'${esc(entry.title)}',author:'${esc(entry.author)}',disc:'${entry.disc}',sub:'${esc(entry.sub)}',status:'${entry.status}',tier:'${entry.tier}',note:'${esc(entry.note)}',models:${JSON.stringify(entry.models)}}`;
+  const ANCHOR = '// VIEW SWITCHING';
+  const anchorIdx = html.indexOf(ANCHOR);
+  if (anchorIdx === -1) return html;
+  // 找 books 数组的 ];（在 ANCHOR 之前的最后一个 ];）
+  const closeIdx = html.lastIndexOf('];', anchorIdx);
+  if (closeIdx === -1) return html;
+  return html.slice(0, closeIdx) + ',\n' + entryStr + '\n' + html.slice(closeIdx);
+}
+
+function esc(s) { return (s||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'"); }
+
+// ── Token 验证
+async function testGhToken() {
+  const token = document.getElementById('gh-token-input')?.value;
+  if (!token) { alert('请输入 Token'); return; }
+  try {
+    const r = await fetch('https://api.github.com/user', { headers: { 'Authorization': `token ${token}` } });
+    const u = await r.json();
+    if (u.login) showBanner('upload-banner1','success',`Token 有效 ✓ 登录用户：${u.login}`);
+    else showBanner('upload-banner1','error','Token 无效');
+  } catch(e) {
+    showBanner('upload-banner1','error',`验证失败：${e.message}`);
+  }
+}
+
+// ── 导航辅助
+function backToStep1() {
+  document.getElementById('upload-step2').style.display='none';
+  document.getElementById('upload-step1').style.display='block';
+}
+function backToStep2() {
+  document.getElementById('upload-step3').style.display='none';
+  document.getElementById('upload-step2').style.display='block';
+}
+function backToStep3() {
+  document.getElementById('upload-step4').style.display='none';
+  document.getElementById('upload-step3').style.display='block';
+}
+
+// ── 横幅工具
+function showBanner(containerId, type, msg) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  el.innerHTML = `<div class="upload-banner banner-${type}">${type==='loading'?'⟳ ':''}${msg}</div>`;
 }
 </script>
 
