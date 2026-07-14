@@ -208,7 +208,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
   </div>
   <div class="header-meta">
     <div><span>学科</span> 11 · <span>二级</span> 61 · <span>模型</span> 300+</div>
-    <div><span>已有书目</span> 30+ · <span>推荐新增</span> 35</div>
+    <div><span>书目总量</span> 96本 · <span>推荐新增</span> 67本</div>
     <div style="margin-top:.3rem;color:var(--gold-dim)">MECE × 芒格格栅思维 · 点击模型标签查看详情</div>
   </div>
 </header>
@@ -309,7 +309,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
     <button class="filter-btn active" onclick="filterBooks('all',this)">全部书目</button>
     <button class="filter-btn" onclick="filterBooks('owned',this)">✅ 已有</button>
     <button class="filter-btn" onclick="filterBooks('new',this)">⭐ 推荐新增</button>
-    <button class="filter-btn" onclick="filterBooks('tier1',this)">第一梯队</button>
+    <button class="filter-btn" onclick="filterBooks('tier1',this)">第一梯队 · 立即读</button>
     <button class="filter-btn" onclick="filterBooks('tier2',this)">第二梯队</button>
     <button class="filter-btn" onclick="filterBooks('disc-1',this)">哲学</button>
     <button class="filter-btn" onclick="filterBooks('disc-2',this)">数学/统计</button>
@@ -850,6 +850,39 @@ const books = [
   {title:'经济学原理',author:'曼昆',disc:'disc-8',sub:'8.1 微观经济学',status:'new',tier:'tier2',note:'最系统的经济学入门，建立完整的经济学思维框架',models:['机会成本','边际分析','供需均衡','信息不对称（柠檬市场·道德风险·逆向选择）']},
   // ── 新增模型对应书目（语言学+误判心理）
   {title:'思考，快与慢',author:'丹尼尔·卡尼曼',disc:'disc-7',sub:'7.3/7.4',status:'owned',tier:'',note:'已有——同时覆盖行为经济学(7.3)和误判心理学(7.4)框架',models:['易得性偏差（可得性启发）','过度自信（自视过高）','Lollapalooza效应','双系统理论（系统1快思考·系统2慢思考）','前景理论（损失厌恶·卡尼曼）','锚定效应','峰终定律']},
+,
+  {title:'思考的艺术',author:'罗尔夫·多贝里',disc:'disc-1',sub:'1.2 逻辑学',status:'new',tier:'tier1',note:'52种系统性思维错误，覆盖逻辑谬误+认知偏误，芒格误判心理学通俗合集',models:["常见谬误识别（稻草人/滑坡/诉诸权威）", "易得性偏差（可得性启发）", "过度自信（自视过高）", "承诺一致性（避免不一致）"]},
+  {title:'实用主义',author:'威廉·詹姆斯',disc:'disc-1',sub:'1.7 实用主义哲学',status:'new',tier:'tier2',note:'实用主义哲学原典，有效性检验、失效模型识别、行动导向真理观',models:["实用主义（詹姆斯·杜威）", "批判理性主义（波普尔·证伪原则）", "地图与领土"]},
+  {title:'苏菲的世界',author:'乔斯坦·贾德',disc:'disc-1',sub:'1.1 认识论',status:'new',tier:'tier3',note:'哲学史最佳入门，从苏格拉底到现代的完整认识论脉络',models:["经验主义（洛克·休谟·培根）", "理性主义（笛卡尔·康德）", "存在主义（萨特·加缪·荒诞）"]},
+  {title:'妙趣横生博弈论',author:'史蒂夫·诺特菲尔德',disc:'disc-2',sub:'2.3 博弈论',status:'new',tier:'tier2',note:'博弈论最佳通俗读本，纳什均衡/囚徒困境/博弈策略完整框架',models:["纳什均衡", "囚徒困境", "进化博弈论", "重复博弈", "零和 vs 非零和"]},
+  {title:'深层简单性',author:'约翰·格里宾',disc:'disc-2',sub:'2.5 复杂适应系统与非线性动力学',status:'new',tier:'tier2',note:'芒格官方推荐书目，混沌与复杂性涌现，简单规则生成复杂行为',models:["涌现性", "临界点（相变）", "自催化", "适应性循环", "耗散结构理论"]},
+  {title:'上帝掷骰子吗',author:'曹天元',disc:'disc-3',sub:'3.1 物理学',status:'new',tier:'tier3',note:'量子力学最佳中文通俗读本，不确定性原理与现代物理世界观',models:["量子力学（不确定性原理·观测效应）", "概率与不确定性"]},
+  {title:'第三种黑猩猩',author:'贾雷德·戴蒙德',disc:'disc-4',sub:'4.1 进化论',status:'new',tier:'tier1',note:'芒格官方推荐，进化视角的人类行为，物种连续性与文明生物学约束',models:["自然选择（达尔文）", "进化稳定策略（ESS）", "适应与路径依赖", "进化博弈论"]},
+  {title:'基因组',author:'马特·里德利',disc:'disc-4',sub:'4.2 遗传学',status:'new',tier:'tier2',note:'23条染色体讲述人类故事，基因与环境交互、表观遗传通俗读本',models:["表观遗传（环境影响基因表达）", "遗传漂变", "神经可塑性"]},
+  {title:'大败局',author:'吴晓波',disc:'disc-5',sub:'5.4 商业史',status:'new',tier:'tier1',note:'中国企业失败案例集，战略过度扩张、创始人人格缺陷、组织失控规律',models:["路径依赖", "Lollapalooza效应", "过度自信（自视过高）", "承诺一致性（避免不一致）"]},
+  {title:'中国近代史',author:'蒋廷黻',disc:'disc-5',sub:'5.1 中国史',status:'new',tier:'tier2',note:'中国近代史最经典简史，理解中国现代化转型的底层逻辑',models:["费正清冲击-回应模式", "制度变迁理论（诺斯·产权保护）", "路径依赖"]},
+  {title:'框架效应',author:'乔治·雷可夫',disc:'disc-6',sub:'6.1 叙事逻辑',status:'new',tier:'tier2',note:'语言框架如何塑造认知与决策，政治/商业传播的底层逻辑',models:["叙事思维（Narrative Thinking）", "框架效应（Framing Effect）", "隐喻思维", "锚定效应"]},
+  {title:'有限理性',author:'赫伯特·西蒙',disc:'disc-7',sub:'7.1 认知心理学',status:'new',tier:'tier2',note:'芒格官方推荐，有限理性原典，满意化决策与认知约束下的组织行为',models:["双系统理论（系统1快思考·系统2慢思考）", "认知负荷理论", "过度自信（自视过高）", "元认知（对自身思维的监控）"]},
+  {title:'社会性动物',author:'艾略特·阿伦森',disc:'disc-7',sub:'7.2 社会心理学',status:'new',tier:'tier2',note:'社会心理学最权威教材，态度/从众/偏见/攻击行为系统解析',models:["社会认同理论", "从众与信息瀑布", "基本归因错误", "晕轮效应", "集体智慧（多样性与独立性）"]},
+  {title:'大转型',author:'卡尔·波兰尼',disc:'disc-8',sub:'8.3 政治经济学',status:'new',tier:'tier2',note:'自由市场是被规划的，嵌入性经济，理解中国政府与市场关系的理论基础',models:["制度经济学（科斯定理·交易成本）", "路径依赖", "国家能力与市场边界", "激励相容"]},
+  {title:'债：前5000年',author:'大卫·格雷伯',disc:'disc-8',sub:'8.5 人类学',status:'new',tier:'tier2',note:'人类学视角重构货币与债务历史，信用关系才是人类经济的原始形态',models:["礼物经济（莫斯）", "互惠原则（回馈倾向）", "信息不对称（柠檬市场·道德风险·逆向选择）"]},
+  {title:'国家的视角',author:'詹姆斯·斯科特',disc:'disc-8',sub:'8.3 政治经济学',status:'new',tier:'tier2',note:'行政可读性vs本地知识，高度现代主义失败案例，理解政策执行的张力',models:["地图与领土", "国家能力与市场边界", "路径依赖", "制度经济学（科斯定理·交易成本）"]},
+  {title:'经济学通识',author:'保罗·萨缪尔森',disc:'disc-8',sub:'8.2 宏观经济学',status:'new',tier:'tier3',note:'诺贝尔奖得主经济学通识，宏观经济核心概念最权威的通俗呈现',models:["供需均衡", "边际分析", "机会成本", "凯恩斯主义（需求管理）"]},
+  {title:'管理的实践',author:'彼得·德鲁克',disc:'disc-9',sub:'9.1 战略管理',status:'new',tier:'tier1',note:'现代管理学奠基之作，目标管理MBO原典，知识工作者概念源头',models:["OKR vs KPI", "系统思考（彼得·圣吉）", "胜任力模型", "绩效管理循环"]},
+  {title:'卓有成效的管理者',author:'彼得·德鲁克',disc:'disc-9',sub:'9.2 组织行为学/领导力',status:'new',tier:'tier1',note:'德鲁克最实用著作，时间/决策/贡献/长处的完整高效工作方法论',models:["深度工作（卡尔·纽波特）", "艾森豪威尔矩阵（重要-紧急）", "刻意练习（艾利克森）", "二阶思维"]},
+  {title:'第五项修炼',author:'彼得·圣吉',disc:'disc-9',sub:'9.3 运营管理',status:'new',tier:'tier1',note:'学习型组织原典，系统思考+心智模式+共同愿景，组织学习底层框架',models:["系统思考（彼得·圣吉）", "约束理论（TOC·瓶颈管理）", "耗散结构理论", "心理安全感（艾德蒙森）"]},
+  {title:'赋能',author:'斯坦利·麦克里斯特尔',disc:'disc-9',sub:'9.2 组织行为学/领导力',status:'new',tier:'tier2',note:'特种部队VUCA实战，团队信息共享与去中心化领导的组织变革',models:["心理安全感（艾德蒙森）", "涌现性", "集体智慧（多样性与独立性）", "约束理论（TOC·瓶颈管理）"]},
+  {title:'基业长青',author:'吉姆·柯林斯',disc:'disc-9',sub:'9.1 战略管理',status:'new',tier:'tier2',note:'18家百年企业的长期主义密码，核心价值观vs运营实践的区分',models:["护城河理论（巴菲特·五种护城河）", "路径依赖", "复利原理", "耗散结构理论"]},
+  {title:'腾讯传',author:'吴晓波',disc:'disc-10',sub:'10.4 商业模式',status:'new',tier:'tier1',note:'中国互联网最重要商业史，平台生态战略、产品迭代哲学、连接一切',models:["网络效应（梅特卡夫定律）", "颠覆性创新（克里斯滕森）", "进化博弈论", "商业模式九宫格"]},
+  {title:'财报就是一本故事书',author:'刘顺仁',disc:'disc-10',sub:'10.2 财务分析',status:'new',tier:'tier1',note:'最好的中文财务分析入门，三表联动阅读法与盈利质量识别',models:["三表联动分析", "杜邦拆解（ROE驱动因素）", "盈利质量识别", "财务造假信号"]},
+  {title:'证券分析',author:'本杰明·格雷厄姆',disc:'disc-10',sub:'10.1 价值投资',status:'new',tier:'tier2',note:'价值投资圣经，安全边际实操框架，格雷厄姆体系完整版',models:["安全边际（格雷厄姆）", "护城河理论（巴菲特·五种护城河）", "自由现金流估值（FCF）", "盈利质量识别"]},
+  {title:'浪潮之巅',author:'吴军',disc:'disc-10',sub:'10.5 创业与创新',status:'new',tier:'tier2',note:'科技产业兴衰规律，平台垄断逻辑与技术创新扩散的历史视角',models:["创新扩散S曲线", "颠覆性创新（克里斯滕森）", "网络效应（梅特卡夫定律）", "产业生命周期"]},
+  {title:'门口的野蛮人',author:'布莱恩·伯勒',disc:'disc-10',sub:'10.5 创业与创新',status:'new',tier:'tier2',note:'KKR收购RJR经典案例，私募资本运作与激励机制失灵的商业教案',models:["激励相容", "信息不对称（柠檬市场·道德风险·逆向选择）", "承诺一致性（避免不一致）", "奖惩超级反应倾向"]},
+  {title:'谈判力',author:'罗杰·费希尔',disc:'disc-11',sub:'11.2 社交效能',status:'new',tier:'tier1',note:'芒格官方推荐，哈佛谈判项目原典，立场vs利益、BATNA原则性谈判',models:["哈佛谈判原则（利益 vs 立场）", "互惠原则（回馈倾向）", "锚定效应", "信息不对称（柠檬市场·道德风险·逆向选择）"]},
+  {title:'运动改造大脑',author:'约翰·瑞迪',disc:'disc-11',sub:'11.4 身体效能',status:'new',tier:'tier2',note:'运动提升认知的神经科学机制，BDNF、海马体与执行功能',models:["神经可塑性", "多巴胺与奖励回路", "运动与认知的神经机制", "压力-恢复周期（超偿原理）"]},
+  {title:'给予者',author:'亚当·格兰特',disc:'disc-11',sub:'11.2 社交效能',status:'new',tier:'tier1',note:'给予者如何在职场取得长期成功，互惠型社交资本积累策略',models:["给予者-索取者-匹配者（格兰特）", "社会资本理论（格兰诺维特·弱关系的力量）", "互惠原则（回馈倾向）", "复利原理"]},
+  {title:'搞定',author:'大卫·艾伦',disc:'disc-11',sub:'11.1 时间效能',status:'new',tier:'tier2',note:'GTD方法论原典，清空大脑→捕获→处理→组织→执行的完整系统',models:["GTD（Getting Things Done）", "认知负荷理论", "深度工作（卡尔·纽波特）", "艾森豪威尔矩阵（重要-紧急）"]},
+  {title:'超级大脑',author:'迪帕克·乔普拉',disc:'disc-11',sub:'11.4 身体效能',status:'new',tier:'tier3',note:'神经科学视角的意识与健康，大脑可塑性与认知优化',models:["神经可塑性", "正念冥想（注意力训练）", "昼夜节律管理", "默认模式网络"]}
 ];
 
 // ════════════════════════════════════════
