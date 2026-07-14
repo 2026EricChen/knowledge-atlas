@@ -315,12 +315,12 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
     <button class="filter-btn" onclick="filterBooks('disc-2',this)">数学/统计</button>
     <button class="filter-btn" onclick="filterBooks('disc-4',this)">生命科学</button>
     <button class="filter-btn" onclick="filterBooks('disc-5',this)">历史学</button>
-    <button class="filter-btn" onclick="filterBooks('disc-6',this)">语言学</button>
-    <button class="filter-btn" onclick="filterBooks('disc-6',this)">心理学</button>
-    <button class="filter-btn" onclick="filterBooks('disc-7',this)">经济学</button>
-    <button class="filter-btn" onclick="filterBooks('disc-8',this)">管理学</button>
-    <button class="filter-btn" onclick="filterBooks('disc-9',this)">投资商业</button>
-    <button class="filter-btn" onclick="filterBooks('disc-10',this)">个人效能</button>
+    <button class="filter-btn" onclick="filterBooks('disc-7',this)">语言学</button>
+    <button class="filter-btn" onclick="filterBooks('disc-7',this)">心理学</button>
+    <button class="filter-btn" onclick="filterBooks('disc-8',this)">经济学</button>
+    <button class="filter-btn" onclick="filterBooks('disc-9',this)">管理学</button>
+    <button class="filter-btn" onclick="filterBooks('disc-10',this)">投资商业</button>
+    <button class="filter-btn" onclick="filterBooks('disc-11',this)">个人效能</button>
   </div>
   <div class="books-grid" id="books-grid"></div>
 </div>
@@ -788,7 +788,7 @@ const books = [
   {title:'被讨厌的勇气',author:'岸见一郎',disc:'disc-1',sub:'1.6 存在主义',status:'owned',tier:'',note:'阿德勒心理学，课题分离的实践',models:['存在主义（萨特·加缪·荒诞）']},
   {title:'传习录',author:'王阳明',disc:'disc-1',sub:'1.5 东方哲学',status:'new',tier:'tier1',note:'知行合一原典，当前人生阶段高度相关',models:['阳明心学（知行合一）']},
   {title:'猜想与反驳',author:'卡尔·波普尔',disc:'disc-1',sub:'1.1 认识论',status:'new',tier:'tier2',note:'证伪思维源头，科学思维方法论',models:['批判理性主义（波普尔·证伪原则）']},
-  {title:'思考，快与慢',author:'丹尼尔·卡尼曼',disc:'disc-6',sub:'6.1/6.3',status:'owned',tier:'',note:'双系统理论+行为经济学精华集成',models:['双系统理论（系统1快思考·系统2慢思考）','前景理论（损失厌恶·卡尼曼）','锚定效应','峰终定律','基准率谬误']},
+  {title:'思考，快与慢',author:'丹尼尔·卡尼曼',disc:'disc-7',sub:'7.1/7.3',status:'owned',tier:'',note:'双系统理论+行为经济学精华集成',models:['双系统理论（系统1快思考·系统2慢思考）','前景理论（损失厌恶·卡尼曼）','锚定效应','峰终定律','基准率谬误']},
   {title:'随机漫步的傻瓜',author:'纳西姆·塔勒布',disc:'disc-2',sub:'2.1 概率论',status:'new',tier:'tier1',note:'概率盲点最佳入门，CFA背景高度相关',models:['贝叶斯推理（先验→后验）','期望值思维','黑天鹅理论（塔勒布）']},
   {title:'赤裸裸的统计学',author:'查尔斯·惠兰',disc:'disc-2',sub:'2.2 统计学',status:'new',tier:'tier2',note:'统计误用识别，数据分析思维',models:['统计显著性的误用（p-hacking）','描述统计','推断统计']},
   {title:'策略思维',author:'阿维纳什·迪克西特',disc:'disc-2',sub:'2.3 博弈论',status:'new',tier:'tier2',note:'博弈论最佳普及版，商业竞争策略',models:['纳什均衡','囚徒困境','重复博弈','逆向归纳法']},
@@ -809,37 +809,47 @@ const books = [
   {title:'中国历代政治得失',author:'钱穆',disc:'disc-5',sub:'5.1 中国史',status:'new',tier:'tier2',note:'制度视角读中国历代政治，极精炼',models:['王朝周期论（兴衰规律）','儒法互补的治理逻辑']},
   {title:'历史的教训',author:'威尔·杜兰特',disc:'disc-5',sub:'5.2 世界史',status:'new',tier:'tier2',note:'11条历史规律精华，薄册一小时读完',models:['幸存者偏差识别','历史类比的边界']},
   {title:'商业冒险',author:'约翰·布鲁克斯',disc:'disc-5',sub:'5.4 商业史',status:'new',tier:'tier2',note:'巴菲特推荐商业史经典，12个商业故事',models:['产业生命周期','信息不对称（柠檬市场·道德风险·逆向选择）']},
-  {title:'影响力',author:'罗伯特·西奥迪尼',disc:'disc-6',sub:'6.2 社会心理学',status:'owned',tier:'',note:'六大影响力原则，销售/谈判/管理必读',models:['影响力六原则（西奥迪尼）','锚定效应','社会认同理论']},
-  {title:'金钱心理学',author:'摩根·豪塞尔',disc:'disc-6',sub:'6.3 行为经济学',status:'owned',tier:'',note:'投资行为心理学，财富与人性的关系',models:['复利模型','前景理论（损失厌恶·卡尼曼）','心理账户']},
-  {title:'心流',author:'契克森米哈伊',disc:'disc-6',sub:'6.5 积极心理学',status:'owned',tier:'',note:'心流理论原典，最优体验的条件',models:['心流理论（契克森米哈伊）','自我决定论（内在动机三要素）']},
-  {title:'预测非理性',author:'丹·艾瑞里',disc:'disc-6',sub:'6.3 行为经济学',status:'new',tier:'tier1',note:'日常决策偏误实验全景，高度可读',models:['锚定效应','前景理论（损失厌恶·卡尼曼）','心理账户','峰终定律']},
-  {title:'乌合之众',author:'古斯塔夫·勒庞',disc:'disc-6',sub:'6.2 社会心理学',status:'new',tier:'tier2',note:'群体心理经典原典，理解集体行为',models:['从众与信息瀑布','社会认同理论']},
-  {title:'持续的幸福',author:'马丁·塞利格曼',disc:'disc-6',sub:'6.5 积极心理学',status:'new',tier:'tier2',note:'PERMA模型原典，积极心理学奠基之作',models:['PERMA模型（塞利格曼）','韧性与创伤后成长']},
-  {title:'魔鬼经济学',author:'史蒂芬·列维特',disc:'disc-7',sub:'7.1 微观经济学',status:'new',tier:'tier2',note:'微观经济思维趣味入门，激励机制案例',models:['机会成本','信息不对称（柠檬市场·道德风险·逆向选择）','边际分析']},
-  {title:'社会学的想象力',author:'C·赖特·米尔斯',disc:'disc-7',sub:'7.4 社会学',status:'new',tier:'tier2',note:'用社会学视角看个体困境，思维方式的升维',models:['社会资本理论（格兰诺维特·弱关系的力量）','场域与惯习（布尔迪厄）']},
-  {title:'这次不同了',author:'莱因哈特·罗格夫',disc:'disc-7',sub:'7.2 宏观经济学',status:'new',tier:'tier2',note:'800年金融危机规律，历史必然性研究',models:['金融危机周期（莱因哈特·这次不同了）','明斯基时刻']},
-  {title:'创新者的窘境',author:'克莱顿·克里斯滕森',disc:'disc-8',sub:'8.1 战略管理',status:'owned',tier:'',note:'颠覆性创新理论原典，理解行业更替规律',models:['颠覆性创新（克里斯滕森）','创新扩散S曲线','产业生命周期']},
-  {title:'心理安全感',author:'艾米·艾德蒙森',disc:'disc-8',sub:'8.2 领导力',status:'new',tier:'tier1',note:'高绩效团队底层密码，带团队必读',models:['心理安全感（艾德蒙森）']},
-  {title:'目标',author:'艾利·高德拉特',disc:'disc-8',sub:'8.3 运营管理',status:'new',tier:'tier1',note:'TOC约束理论最佳入门，小说体极易读',models:['约束理论（TOC·瓶颈管理）','PDCA循环']},
-  {title:'定位',author:'里斯·特劳特',disc:'disc-8',sub:'8.4 营销管理',status:'new',tier:'tier2',note:'营销思维基石，心智占领的本质',models:['STP框架（细分·目标·定位）','品牌资产理论（科勒）']},
-  {title:'竞争战略',author:'迈克尔·波特',disc:'disc-8',sub:'8.1 战略管理',status:'new',tier:'tier2',note:'五力模型原典，贝恩背景可快速读完',models:['波特五力模型','价值链分析','竞争优势理论（成本领先·差异化·聚焦）']},
-  {title:'人才',author:'拉姆·查兰',disc:'disc-8',sub:'8.5 人力资源',status:'new',tier:'tier2',note:'识人用人的判断框架，HR视角实战指南',models:['胜任力模型','人才盘点九宫格']},
-  {title:'穷查理宝典',author:'查理·芒格',disc:'disc-9',sub:'9.1 价值投资',status:'owned',tier:'',note:'格栅思维母本，本知识库的思想基础',models:['护城河理论（巴菲特·五种护城河）','期望值思维','贝叶斯推理（先验→后验）','第一性原理','机会成本']},
-  {title:'从0到1',author:'彼得·蒂尔',disc:'disc-9',sub:'9.5 创业与创新',status:'owned',tier:'',note:'垄断与创新，反直觉的商业哲学',models:['从0到1 vs 从1到N','护城河理论（巴菲特·五种护城河）','第一性原理']},
-  {title:'聪明的投资者',author:'本杰明·格雷厄姆',disc:'disc-9',sub:'9.1 价值投资',status:'new',tier:'tier1',note:'价值投资原典，CFA背景配套阅读',models:['安全边际（格雷厄姆）','市场先生寓言','逆向投资心理']},
-  {title:'债务危机',author:'瑞·达利欧',disc:'disc-9',sub:'9.3 宏观与周期',status:'new',tier:'tier1',note:'长短债务周期全景，宏观分析框架',models:['债务周期理论（达利欧·长短周期）','美林时钟（经济周期×通胀周期）','利率与资产定价']},
-  {title:'黑天鹅',author:'纳西姆·塔勒布',disc:'disc-9',sub:'9.6 风险管理',status:'new',tier:'tier2',note:'尾部风险认知必读，认知局限的元思考',models:['黑天鹅理论（塔勒布）','反脆弱性']},
-  {title:'商业模式新生代',author:'亚历山大·奥斯特瓦德',disc:'disc-9',sub:'9.4 商业模式',status:'new',tier:'tier2',note:'九宫格工具原典，商业模式设计工具书',models:['商业模式九宫格','价值主张画布','双边平台逻辑']},
-  {title:'精益创业',author:'埃里克·莱斯',disc:'disc-9',sub:'9.5 创业与创新',status:'new',tier:'tier2',note:'MVP验证学习方法论，创业标准配置',models:['精益创业（MVP·验证学习）','产品市场契合（PMF）']},
-  {title:'巴菲特的护城河',author:'帕特·多西',disc:'disc-9',sub:'9.2 财务分析',status:'new',tier:'tier2',note:'用财务视角理解竞争优势，护城河量化',models:['护城河理论（巴菲特·五种护城河）','杜邦拆解（ROE驱动因素）']},
-  {title:'纳瓦尔宝典',author:'纳瓦尔·拉维坎特',disc:'disc-10',sub:'10.1 时间效能',status:'owned',tier:'',note:'财富与幸福的底层逻辑，格言式智慧',models:['复利模型','机会成本','第一性原理思考']},
-  {title:'原则',author:'瑞·达利欧',disc:'disc-10',sub:'10.3 精神效能',status:'owned',tier:'',note:'系统化思考框架，从失败中学习的方法论',models:['贝叶斯推理（先验→后验）','PDCA循环']},
-  {title:'写作这回事',author:'史蒂芬·金',disc:'disc-10',sub:'10.6 传播与表达',status:'owned',tier:'',note:'写作方法论，真实且可操作',models:['写作即思考']},
-  {title:'深度工作',author:'卡尔·纽波特',disc:'disc-10',sub:'10.1 时间效能',status:'new',tier:'tier1',note:'注意力管理方法论，AI时代核心竞争力',models:['深度工作（卡尔·纽波特）','刻意练习（艾利克森）']},
-  {title:'刻意练习',author:'安德斯·艾利克森',disc:'disc-10',sub:'10.3 精神效能',status:'new',tier:'tier1',note:'技能习得的科学方法，打破一万小时误解',models:['刻意练习（艾利克森）','神经可塑性']},
-  {title:'金字塔原理',author:'芭芭拉·明托',disc:'disc-10',sub:'10.6 传播与表达',status:'new',tier:'tier2',note:'麦肯锡结构化表达原典，咨询背景必备',models:['金字塔原理（麦肯锡·结论前置）']},
-  {title:'非暴力沟通',author:'马歇尔·卢森堡',disc:'disc-10',sub:'10.2 社交效能',status:'new',tier:'tier2',note:'沟通质量底层升级，减少冲突的系统方法',models:['非暴力沟通（NVC）','哈佛谈判原则（利益 vs 立场）']},
-  {title:'为什么要睡觉',author:'马修·沃克',disc:'disc-10',sub:'10.4 身体效能',status:'new',tier:'tier2',note:'睡眠的神经科学，高效能的生理基础',models:['睡眠科学（马修·沃克·睡眠窗口）','神经可塑性','昼夜节律管理']},
+  {title:'影响力',author:'罗伯特·西奥迪尼',disc:'disc-7',sub:'7.2 社会心理学',status:'owned',tier:'',note:'六大影响力原则，销售/谈判/管理必读',models:['影响力六原则（西奥迪尼）','锚定效应','社会认同理论']},
+  {title:'金钱心理学',author:'摩根·豪塞尔',disc:'disc-7',sub:'7.3 行为经济学',status:'owned',tier:'',note:'投资行为心理学，财富与人性的关系',models:['复利模型','前景理论（损失厌恶·卡尼曼）','心理账户']},
+  {title:'心流',author:'契克森米哈伊',disc:'disc-7',sub:'7.6 积极心理学',status:'owned',tier:'',note:'心流理论原典，最优体验的条件',models:['心流理论（契克森米哈伊）','自我决定论（内在动机三要素）']},
+  {title:'预测非理性',author:'丹·艾瑞里',disc:'disc-7',sub:'7.3 行为经济学',status:'new',tier:'tier1',note:'日常决策偏误实验全景，高度可读',models:['锚定效应','前景理论（损失厌恶·卡尼曼）','心理账户','峰终定律']},
+  {title:'乌合之众',author:'古斯塔夫·勒庞',disc:'disc-7',sub:'7.2 社会心理学',status:'new',tier:'tier2',note:'群体心理经典原典，理解集体行为',models:['从众与信息瀑布','社会认同理论']},
+  {title:'持续的幸福',author:'马丁·塞利格曼',disc:'disc-7',sub:'7.6 积极心理学',status:'new',tier:'tier2',note:'PERMA模型原典，积极心理学奠基之作',models:['PERMA模型（塞利格曼）','韧性与创伤后成长']},
+  {title:'魔鬼经济学',author:'史蒂芬·列维特',disc:'disc-8',sub:'8.1 微观经济学',status:'new',tier:'tier2',note:'微观经济思维趣味入门，激励机制案例',models:['机会成本','信息不对称（柠檬市场·道德风险·逆向选择）','边际分析']},
+  {title:'社会学的想象力',author:'C·赖特·米尔斯',disc:'disc-8',sub:'8.4 社会学',status:'new',tier:'tier2',note:'用社会学视角看个体困境，思维方式的升维',models:['社会资本理论（格兰诺维特·弱关系的力量）','场域与惯习（布尔迪厄）']},
+  {title:'这次不同了',author:'莱因哈特·罗格夫',disc:'disc-8',sub:'8.2 宏观经济学',status:'new',tier:'tier2',note:'800年金融危机规律，历史必然性研究',models:['金融危机周期（莱因哈特·这次不同了）','明斯基时刻']},
+  {title:'创新者的窘境',author:'克莱顿·克里斯滕森',disc:'disc-9',sub:'9.1 战略管理',status:'owned',tier:'',note:'颠覆性创新理论原典，理解行业更替规律',models:['颠覆性创新（克里斯滕森）','创新扩散S曲线','产业生命周期']},
+  {title:'心理安全感',author:'艾米·艾德蒙森',disc:'disc-9',sub:'9.2 领导力',status:'new',tier:'tier1',note:'高绩效团队底层密码，带团队必读',models:['心理安全感（艾德蒙森）']},
+  {title:'目标',author:'艾利·高德拉特',disc:'disc-9',sub:'9.3 运营管理',status:'new',tier:'tier1',note:'TOC约束理论最佳入门，小说体极易读',models:['约束理论（TOC·瓶颈管理）','PDCA循环']},
+  {title:'定位',author:'里斯·特劳特',disc:'disc-9',sub:'9.4 营销管理',status:'new',tier:'tier2',note:'营销思维基石，心智占领的本质',models:['STP框架（细分·目标·定位）','品牌资产理论（科勒）']},
+  {title:'竞争战略',author:'迈克尔·波特',disc:'disc-9',sub:'9.1 战略管理',status:'new',tier:'tier2',note:'五力模型原典，贝恩背景可快速读完',models:['波特五力模型','价值链分析','竞争优势理论（成本领先·差异化·聚焦）']},
+  {title:'人才',author:'拉姆·查兰',disc:'disc-9',sub:'9.5 人力资源',status:'new',tier:'tier2',note:'识人用人的判断框架，HR视角实战指南',models:['胜任力模型','人才盘点九宫格']},
+  {title:'穷查理宝典',author:'查理·芒格',disc:'disc-10',sub:'10.1 价值投资',status:'owned',tier:'',note:'格栅思维母本，本知识库的思想基础',models:['护城河理论（巴菲特·五种护城河）','期望值思维','贝叶斯推理（先验→后验）','第一性原理','机会成本']},
+  {title:'从0到1',author:'彼得·蒂尔',disc:'disc-10',sub:'10.5 创业与创新',status:'owned',tier:'',note:'垄断与创新，反直觉的商业哲学',models:['从0到1 vs 从1到N','护城河理论（巴菲特·五种护城河）','第一性原理']},
+  {title:'聪明的投资者',author:'本杰明·格雷厄姆',disc:'disc-10',sub:'10.1 价值投资',status:'new',tier:'tier1',note:'价值投资原典，CFA背景配套阅读',models:['安全边际（格雷厄姆）','市场先生寓言','逆向投资心理']},
+  {title:'债务危机',author:'瑞·达利欧',disc:'disc-10',sub:'10.3 宏观与周期',status:'new',tier:'tier1',note:'长短债务周期全景，宏观分析框架',models:['债务周期理论（达利欧·长短周期）','美林时钟（经济周期×通胀周期）','利率与资产定价']},
+  {title:'黑天鹅',author:'纳西姆·塔勒布',disc:'disc-10',sub:'10.6 风险管理',status:'new',tier:'tier2',note:'尾部风险认知必读，认知局限的元思考',models:['黑天鹅理论（塔勒布）','反脆弱性']},
+  {title:'商业模式新生代',author:'亚历山大·奥斯特瓦德',disc:'disc-10',sub:'10.4 商业模式',status:'new',tier:'tier2',note:'九宫格工具原典，商业模式设计工具书',models:['商业模式九宫格','价值主张画布','双边平台逻辑']},
+  {title:'精益创业',author:'埃里克·莱斯',disc:'disc-10',sub:'10.5 创业与创新',status:'new',tier:'tier2',note:'MVP验证学习方法论，创业标准配置',models:['精益创业（MVP·验证学习）','产品市场契合（PMF）']},
+  {title:'巴菲特的护城河',author:'帕特·多西',disc:'disc-10',sub:'10.2 财务分析',status:'new',tier:'tier2',note:'用财务视角理解竞争优势，护城河量化',models:['护城河理论（巴菲特·五种护城河）','杜邦拆解（ROE驱动因素）']},
+  {title:'纳瓦尔宝典',author:'纳瓦尔·拉维坎特',disc:'disc-11',sub:'11.1 时间效能',status:'owned',tier:'',note:'财富与幸福的底层逻辑，格言式智慧',models:['复利模型','机会成本','第一性原理思考']},
+  {title:'原则',author:'瑞·达利欧',disc:'disc-11',sub:'11.3 精神效能',status:'owned',tier:'',note:'系统化思考框架，从失败中学习的方法论',models:['贝叶斯推理（先验→后验）','PDCA循环']},
+  {title:'写作这回事',author:'史蒂芬·金',disc:'disc-11',sub:'11.6 传播与表达',status:'owned',tier:'',note:'写作方法论，真实且可操作',models:['写作即思考']},
+  {title:'深度工作',author:'卡尔·纽波特',disc:'disc-11',sub:'11.1 时间效能',status:'new',tier:'tier1',note:'注意力管理方法论，AI时代核心竞争力',models:['深度工作（卡尔·纽波特）','刻意练习（艾利克森）']},
+  {title:'刻意练习',author:'安德斯·艾利克森',disc:'disc-11',sub:'11.3 精神效能',status:'new',tier:'tier1',note:'技能习得的科学方法，打破一万小时误解',models:['刻意练习（艾利克森）','神经可塑性']},
+  {title:'金字塔原理',author:'芭芭拉·明托',disc:'disc-11',sub:'11.6 传播与表达',status:'new',tier:'tier2',note:'麦肯锡结构化表达原典，咨询背景必备',models:['金字塔原理（麦肯锡·结论前置）']},
+  {title:'非暴力沟通',author:'马歇尔·卢森堡',disc:'disc-11',sub:'11.2 社交效能',status:'new',tier:'tier2',note:'沟通质量底层升级，减少冲突的系统方法',models:['非暴力沟通（NVC）','哈佛谈判原则（利益 vs 立场）']},
+  {title:'为什么要睡觉',author:'马修·沃克',disc:'disc-11',sub:'11.4 身体效能',status:'new',tier:'tier2',note:'睡眠的神经科学，高效能的生理基础',models:['睡眠科学（马修·沃克·睡眠窗口）','神经可塑性','昼夜节律管理']},
+
+  // ── 语言学/人文学科（disc-6，新增）
+  {title:'故事经济学',author:'罗伯特·麦基',disc:'disc-6',sub:'6.1 叙事逻辑',status:'new',tier:'tier2',note:'从好莱坞叙事原理到商业沟通，理解叙事如何驱动决策',models:['叙事思维（Narrative Thinking）','故事结构（英雄之旅·冲突-转折-解决）','框架效应（Framing Effect）']},
+  {title:'修辞的力量',author:'亚里士多德',disc:'disc-6',sub:'6.1 叙事逻辑',status:'new',tier:'tier3',note:'西方修辞学原典，情感/逻辑/可信度三角是所有说服的底层',models:['叙事思维（Narrative Thinking）','隐喻思维']},
+  {title:'语言本能',author:'史蒂芬·平克',disc:'disc-6',sub:'6.2 语言哲学',status:'new',tier:'tier3',note:'语言的生物基础，理解语言如何构建认知框架',models:['维特根斯坦语言游戏','语言相对论（萨丕尔-沃尔夫）']},
+  // ── 经济学补强（disc-8）
+  {title:'国富论',author:'亚当·斯密',disc:'disc-8',sub:'8.1 微观经济学',status:'new',tier:'tier3',note:'市场机制的原典，看不见的手与分工理论的源头',models:['供需均衡','价格信号机制','边际分析']},
+  {title:'经济学原理',author:'曼昆',disc:'disc-8',sub:'8.1 微观经济学',status:'new',tier:'tier2',note:'最系统的经济学入门，建立完整的经济学思维框架',models:['机会成本','边际分析','供需均衡','信息不对称（柠檬市场·道德风险·逆向选择）']},
+  // ── 新增模型对应书目（语言学+误判心理）
+  {title:'思考，快与慢',author:'丹尼尔·卡尼曼',disc:'disc-7',sub:'7.3/7.4',status:'owned',tier:'',note:'已有——同时覆盖行为经济学(7.3)和误判心理学(7.4)框架',models:['易得性偏差（可得性启发）','过度自信（自视过高）','Lollapalooza效应','双系统理论（系统1快思考·系统2慢思考）','前景理论（损失厌恶·卡尼曼）','锚定效应','峰终定律']},
 ];
 
 // ════════════════════════════════════════
